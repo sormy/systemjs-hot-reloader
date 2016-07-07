@@ -1,6 +1,6 @@
 {
   "name": "systemjs-hot-reloader",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "SystemJS hot reloader with pluggable reloaders and listeners.",
   "homepage": "https://github.com/sormy/systemjs-hot-reloader",
   "bugs": {
