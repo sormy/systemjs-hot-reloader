@@ -10,18 +10,10 @@
   "author": "Artem Butusov <art.sormy@gmail.com> (https://artembutusov.com)",
   "main": "dist/main.js",
   "typings": "dist/main.d.ts",
+  "registry": "jspm",
   "repository": {
     "type": "git",
     "url": "https://github.com/sormy/systemjs-hot-reloader"
-  },
-  "jspmNodeConversion": false,
-  "jspm": {
-    "main": "main.js",
-    "registry": "npm",
-    "format": "system",
-    "directories": {
-      "dist": "dist"
-    }
   },
   "devDependencies": {
     "gulp": "^3.9.1",
