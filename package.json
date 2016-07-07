@@ -15,7 +15,10 @@
     "url": "https://github.com/sormy/systemjs-hot-reloader"
   },
   "jspm": {
-    "registry": "npm"
+    "registry": "npm",
+    "directories": {
+      "dist": "dist"
+    }
   },
   "devDependencies": {
     "gulp": "^3.9.1",
