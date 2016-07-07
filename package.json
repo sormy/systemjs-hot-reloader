@@ -14,15 +14,7 @@
   },
   "main": "dist/main.js",
   "typings": "dist/main.d.ts",
-  "jspm": {
-    "registry": "npm",
-    "jspmPackage": true,
-    "main": "main",
-    "format": "system",
-    "directories": {
-      "dist": "dist"
-    }
-  },
+  "registry": "npm",
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
