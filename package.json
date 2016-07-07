@@ -1,0 +1,31 @@
+{
+  "name": "systemjs-hot-reloader",
+  "version": "1.0.0",
+  "description": "SystemJS hot reloader with pluggable reloaders and listeners.",
+  "homepage": "https://github.com/sormy/systemjs-hot-reloader",
+  "bugs": {
+    "url": "https://github.com/sormy/systemjs-hot-reloader/issues"
+  },
+  "license": "MIT",
+  "author": "Artem Butusov <art.sormy@gmail.com> (https://artembutusov.com)",
+  "main": "dist/main.js",
+  "typings": "dist/main.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sormy/systemjs-hot-reloader"
+  },
+  "jspm": {
+    "registry": "npm"
+  },
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-clean": "^0.3.2",
+    "gulp-sequence": "^0.4.5",
+    "gulp-typescript": "^2.13.6",
+    "merge2": "^1.0.2",
+    "require-dir": "^0.3.0"
+  },
+  "dependencies": {
+    "socket.io-client": "^1.4.8"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "rootDir": "src/",
+    "target": "es5",
+    "module": "system",
+    "noImplicitAny": true,
+    "noImplicitReturns": true
+  },
+  "filesGlob": [
+    "src/**/*.ts",
+    "typings/index.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "typings/globals"
+  ]
+}
