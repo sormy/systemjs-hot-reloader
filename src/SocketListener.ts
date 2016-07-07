@@ -1,5 +1,3 @@
-import socketIO from 'socket.io-client';
-
 import { IEventListener } from './IEventListener';
 
 export interface ISocketListenerOptions {
