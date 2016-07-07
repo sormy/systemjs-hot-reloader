@@ -17,7 +17,7 @@ This is alternative to capaj/systemjs-hot-reloader.
 ## Installation ##
 
 ```shell
-jspm install github:sormy/systemjs-hot-reloader
+jspm install systemjs-hot-reloader=github:sormy/systemjs-hot-reloader
 ```
 
 ## Recipes ##
@@ -165,6 +165,29 @@ But this small plugin will allow to persist root components state. Just as an ex
         return new exports.HotReloader({
           listeners: [ new exports.BrowserSyncListener() ],
           plugins: [ new exports.KeepReactRootStatePlugin() ]
+        }).attach();
+      })
+      .then(SystemJS.import('app'));
+  } else {
+    SystemJS.import('app');
+  }
+</script>
+```
+
+## Debug hot reloader ##
+
+Enable debug to show some information on console.
+
+```html
+<script src="jspm_packages/system.js"></script>
+<script src="jspm.config.js"></script>
+<script>
+  if (location.hostname === 'localhost') {
+    SystemJS.import('systemjs-hot-reloader')
+      .then(function(exports) {
+        return new exports.HotReloader({
+          listeners: [ new exports.BrowserSyncListener() ],
+          debug: true
         }).attach();
       })
       .then(SystemJS.import('app'));
