@@ -14,7 +14,7 @@
   },
   "main": "dist/main.js",
   "typings": "dist/main.d.ts",
-  "registry": "jspm",
+  "registry": "github",
   "devDependencies": {
     "gulp": "^3.9.1",
     "gulp-clean": "^0.3.2",
