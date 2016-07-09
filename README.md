@@ -6,6 +6,7 @@ This is alternative to capaj/systemjs-hot-reloader.
 
 ## Benefits ##
 
+- browser sync friendly
 - reload js, jsx, ts, tsx etc on the fly with all related modules on the fly
 - small and easy to read
 - pluggable listeners
@@ -14,10 +15,15 @@ This is alternative to capaj/systemjs-hot-reloader.
 - typescript with typings
 - revert module state back if error occured on import
 
+## TODO ##
+
+- BrowserSync plugin for transparent integration.
+- Full state reloader for React applications.
+
 ## Installation ##
 
 ```shell
-jspm install systemjs-hot-reloader=github:sormy/systemjs-hot-reloader
+jspm install systemjs-hot-reloader=github:sormy/systemjs-hot-reloader --dev
 ```
 
 ## Recipes ##
@@ -84,7 +90,19 @@ Frontend index.html:
 </script>
 ```
 
-### Chokidar Event Emitter ###
+BrowserSyncListener options:
+
+- eventName: event name, defaults to "system:change"
+- eventPath: event path, defaults to "path"
+
+### Chokidar Socket Emitter Listener ###
+
+Install socket.io peer dependency:
+
+```shell
+npm install chokidar-socket-emitter --save-dev
+jspm install socket.io-client --dev
+```
 
 Backend task:
 
@@ -100,24 +118,29 @@ Frontend task:
 <script src="jspm.config.js"></script>
 <script>
   if (location.hostname === 'localhost') {
-    SystemJS.import('systemjs-hot-reloader')
-      .then(function(exports) {
-        return new exports.HotReloader({
-          listeners: [ new exports.ChokidarListener('http://localhost:5776') ]
-        }).attach();
-      })
-      .then(SystemJS.import('app'));
+    Promise.all([
+      SystemJS.import('systemjs-hot-reloader'),
+      SystemJS.import('socket.io-client')
+    ])
+    .then(function(exports) {
+      let reloader = exports[0];
+      let socket = exports[1];
+      return new reloader.HotReloader({
+        listeners: [
+          new reloader.SocketListener({
+            socket: socket('http://localhost:5776'),
+            eventPath: 'path',
+            eventName: 'change'
+          })
+        ]
+      }).attach();
+    })
+    .then(SystemJS.import('app'));
   } else {
     SystemJS.import('app');
   }
 </script>
 ```
-
-ChokidarListener options:
-
-- url: chokidar url, for example, "http://localhost:5776"
-- eventName: event name, defaults to "change"
-- eventPath: event path, defaults to "path"
 
 ## Hook into existing 3rd party socket.io ##
 
@@ -133,7 +156,11 @@ Frontend task: any socket.io listener
     SystemJS.import('systemjs-hot-reloader')
       .then(function(exports) {
         return new exports.HotReloader({
-          listeners: [ new exports.SocketListener({ socket: ... }) ]
+          listeners: [
+            new exports.SocketListener({
+              socket: ...
+            })
+          ]
         }).attach();
       })
       .then(SystemJS.import('app'));
@@ -149,7 +176,7 @@ SocketListener options:
 - eventName: event name, defaults to "change"
 - eventPath: event path, defaults to "path"
 
-## React state reloader ##
+## React root state reloader ##
 
 Reloaded react components will loose their state if they don't have properly wired in redux, mobx etc.
 

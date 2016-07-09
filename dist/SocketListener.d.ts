@@ -1,16 +1,15 @@
-import { IEventListener } from './IEventListener';
-export interface ISocketListenerOptions {
+import { EventListenerInterface, EventListenerCallback } from './EventListenerInterface';
+export interface SocketListenerOptionsInterface {
     eventName?: string;
     eventPath?: string;
-    socket: SocketIOClient.Socket;
+    socket?: SocketIOClient.Socket;
 }
-export declare class SocketListener implements IEventListener {
-    private options;
-    reloader: any;
-    private onChange;
-    constructor(options: ISocketListenerOptions);
-    attach(): Promise<void>;
+export declare class SocketListener implements EventListenerInterface {
+    eventName: string;
+    eventPath: string;
+    socket: SocketIOClient.Socket;
+    protected onChange: Function;
+    constructor(options?: SocketListenerOptionsInterface);
+    attach(callback: EventListenerCallback): Promise<void>;
     detach(): Promise<void>;
-    private getEventPath();
-    private getEventName();
 }

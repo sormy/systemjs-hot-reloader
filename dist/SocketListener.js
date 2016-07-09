@@ -7,30 +7,20 @@ System.register([], function(exports_1, context_1) {
         execute: function() {
             SocketListener = (function () {
                 function SocketListener(options) {
-                    this.options = options;
+                    this.eventName = 'change';
+                    this.eventPath = 'path';
+                    this.socket = null;
+                    Object.assign(this, options);
                 }
-                SocketListener.prototype.attach = function () {
+                SocketListener.prototype.attach = function (callback) {
                     var _this = this;
-                    this.onChange = function (event) {
-                        _this.reloader.reloadFile(event[_this.getEventPath()]);
-                    };
-                    return new Promise(function (resolve) {
-                        _this.options.socket.on(_this.getEventName(), _this.onChange);
-                        resolve();
-                    });
+                    this.onChange = function (event) { return callback(event[_this.eventPath]); };
+                    this.socket.on(this.eventName, this.onChange);
+                    return Promise.resolve();
                 };
                 SocketListener.prototype.detach = function () {
-                    var _this = this;
-                    return new Promise(function (resolve) {
-                        _this.options.socket.off(_this.getEventName(), _this.onChange);
-                        resolve();
-                    });
-                };
-                SocketListener.prototype.getEventPath = function () {
-                    return this.options.eventPath || 'path';
-                };
-                SocketListener.prototype.getEventName = function () {
-                    return this.options.eventName || 'change';
+                    this.socket.off(this.eventName, this.onChange);
+                    return Promise.resolve();
                 };
                 return SocketListener;
             }());

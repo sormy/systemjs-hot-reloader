@@ -1,49 +1,35 @@
-import { IEventListener } from './IEventListener';
+import { SocketListener } from './SocketListener';
+import { EventListenerCallback } from './EventListenerInterface';
 
-type IBrowserSync = any;
+type BrowserSyncInterface = {
+  socket: SocketIOClient.Socket
+};
 
 interface MyWindow extends Window {
-  ___browserSync___: IBrowserSync;
+  ___browserSync___: BrowserSyncInterface;
 }
 
 declare var window: MyWindow;
 
-export interface IBrowserSyncListenerOptions {
+export interface BrowserSyncListenerOptionInterface {
   eventName?: string;
   eventPath?: string;
 }
 
-export class BrowserSyncListener implements IEventListener {
-  public reloader: any;
-
-  private options: IBrowserSyncListenerOptions;
-  private onChange: Function;
-
-  constructor(options?: IBrowserSyncListenerOptions) {
-    this.options = options || {};
+export class BrowserSyncListener extends SocketListener {
+  constructor(options?: BrowserSyncListenerOptionInterface) {
+    super();
+    Object.assign(this, { eventName: 'system:change', eventPath: 'path' }, options);
   }
 
-  public attach() {
-    this.onChange = (event: any) => {
-      this.reloader.reloadFile(event[this.getEventPath()]);
-    };
-
+  public attach(callback: EventListenerCallback) {
     return this.waitForBrowserSyncReady()
-      .then((bs: IBrowserSync) => {
-        bs.socket.on(this.getEventName(), this.onChange);
-      });
+      .then((bs: BrowserSyncInterface) => this.socket = bs.socket)
+      .then(() => super.attach(callback));
   }
-
-  public detach() {
-    return new Promise<void>((resolve) => {
-      let bs = window.___browserSync___;
-      bs.socket.off(this.getEventName(), this.onChange);
-      resolve();
-    });
-  };
 
   private waitForBrowserSyncReady() {
-    return new Promise<IBrowserSync>((resolve) => {
+    return new Promise<BrowserSyncInterface>((resolve) => {
       let bs = window.___browserSync___;
       if (bs) {
         resolve(bs);
@@ -57,13 +43,5 @@ export class BrowserSyncListener implements IEventListener {
         }, 500);
       }
     });
-  }
-
-  private getEventPath() {
-    return this.options.eventPath || 'path';
-  }
-
-  private getEventName() {
-    return this.options.eventName || 'system:change';
   }
 }

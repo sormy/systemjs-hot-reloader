@@ -1,6 +1,6 @@
-import { IReloadPlugin } from './IReloadPlugin';
-export declare class KeepReactRootStatePlugin implements IReloadPlugin {
-    private reactHook;
+import { ReloadPluginInterface } from './ReloadPluginInterface';
+export declare class KeepReactRootStatePlugin implements ReloadPluginInterface {
+    private reactHookData;
     private rootStates;
     attach(): Promise<void>;
     supports(moduleName: string): boolean;

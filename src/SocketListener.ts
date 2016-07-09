@@ -1,40 +1,30 @@
-import { IEventListener } from './IEventListener';
+import { EventListenerInterface, EventListenerCallback } from './EventListenerInterface';
 
-export interface ISocketListenerOptions {
+export interface SocketListenerOptionsInterface {
   eventName?: string;
   eventPath?: string;
-  socket: SocketIOClient.Socket;
+  socket?: SocketIOClient.Socket;
 }
 
-export class SocketListener implements IEventListener {
-  public reloader: any;
-  private onChange: Function;
+export class SocketListener implements EventListenerInterface {
+  public eventName: string = 'change';
+  public eventPath: string = 'path';
+  public socket: SocketIOClient.Socket = null;
 
-  constructor(private options: ISocketListenerOptions) {}
+  protected onChange: Function;
 
-  public attach() {
-    this.onChange = (event: any) => {
-      this.reloader.reloadFile(event[this.getEventPath()]);
-    };
+  constructor(options?: SocketListenerOptionsInterface) {
+    Object.assign(this, options);
+  }
 
-    return new Promise<void>((resolve) => {
-      this.options.socket.on(this.getEventName(), this.onChange);
-      resolve();
-    });
+  public attach(callback: EventListenerCallback) {
+    this.onChange = (event: any) => callback(event[this.eventPath]);
+    this.socket.on(this.eventName, this.onChange);
+    return Promise.resolve();
   }
 
   public detach() {
-    return new Promise<void>((resolve) => {
-      this.options.socket.off(this.getEventName(), this.onChange);
-      resolve();
-    });
-  }
-
-  private getEventPath() {
-    return this.options.eventPath || 'path';
-  }
-
-  private getEventName() {
-    return this.options.eventName || 'change';
+    this.socket.off(this.eventName, this.onChange);
+    return Promise.resolve();
   }
 }

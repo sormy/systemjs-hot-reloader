@@ -15,19 +15,13 @@ System.register([], function(exports_1, context_1) {
                     return /\.(tsx?|jsx?)(!|$)/.test(moduleName);
                 };
                 KeepReactRootStatePlugin.prototype.beforeReload = function () {
-                    var _this = this;
-                    return new Promise(function (resolve) {
-                        _this.saveReactRootState();
-                        resolve();
-                    });
+                    this.saveReactRootState();
+                    return Promise.resolve();
                 };
                 KeepReactRootStatePlugin.prototype.afterReload = function () {
-                    var _this = this;
-                    return new Promise(function (resolve) {
-                        _this.loadReactRootState();
-                        _this.rootStates = [];
-                        resolve();
-                    });
+                    this.loadReactRootState();
+                    this.rootStates = [];
+                    return Promise.resolve();
                 };
                 KeepReactRootStatePlugin.prototype.saveReactRootState = function () {
                     var _this = this;
@@ -48,22 +42,20 @@ System.register([], function(exports_1, context_1) {
                     });
                 };
                 KeepReactRootStatePlugin.prototype.installHook = function () {
-                    var _this = this;
-                    return new Promise(function (resolve) {
-                        if (!window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-                            window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { inject: function () { } };
-                        }
-                        var self = _this;
-                        var oldInject = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
-                        window.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = function (hook) {
-                            self.reactHook = hook;
-                            return oldInject.apply(this, arguments);
-                        };
-                        resolve();
-                    });
+                    if (!window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+                        window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { inject: function () { } };
+                    }
+                    var self = this;
+                    var reactGlobalHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+                    var oldInject = reactGlobalHook.inject;
+                    reactGlobalHook.inject = function (hookData) {
+                        self.reactHookData = hookData;
+                        return oldInject.apply(this, arguments);
+                    };
+                    return Promise.resolve();
                 };
                 KeepReactRootStatePlugin.prototype.getClosestComponentInstanceFromNode = function (node) {
-                    var internalInstance = this.reactHook.ComponentTree.getClosestInstanceFromNode(node);
+                    var internalInstance = this.reactHookData.ComponentTree.getClosestInstanceFromNode(node);
                     return internalInstance._currentElement._owner._instance;
                 };
                 KeepReactRootStatePlugin.prototype.getReactNodeState = function (node) {

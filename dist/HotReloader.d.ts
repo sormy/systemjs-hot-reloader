@@ -1,15 +1,15 @@
-import { IReloadPlugin } from './IReloadPlugin';
-import { IEventListener } from './IEventListener';
-export interface IHotReloaderOptions {
-    plugins?: IReloadPlugin[];
-    listeners: IEventListener[];
+import { ReloadPluginInterface } from './ReloadPluginInterface';
+import { EventListenerInterface } from './EventListenerInterface';
+export interface HotReloaderOptionsInterface {
+    plugins?: ReloadPluginInterface[];
+    listeners?: EventListenerInterface[];
     debug?: boolean;
 }
 export declare class HotReloader {
     private listeners;
     private plugins;
     private debug;
-    constructor(options: IHotReloaderOptions);
+    constructor(options?: HotReloaderOptionsInterface);
     log(message: string): void;
     attach(): Promise<Promise<void>[]>;
     reloadFile(path: string): Promise<Promise<void>[]>;

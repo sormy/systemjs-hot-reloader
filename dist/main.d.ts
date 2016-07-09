@@ -1,4 +1,3 @@
-export * from './ChokidarListener';
 export * from './SocketListener';
 export * from './BrowserSyncListener';
 export * from './KeepReactRootStatePlugin';

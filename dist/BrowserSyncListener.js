@@ -1,33 +1,31 @@
-System.register([], function(exports_1, context_1) {
+System.register(['./SocketListener'], function(exports_1, context_1) {
     "use strict";
     var __moduleName = context_1 && context_1.id;
+    var __extends = (this && this.__extends) || function (d, b) {
+        for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+        function __() { this.constructor = d; }
+        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+    };
+    var SocketListener_1;
     var BrowserSyncListener;
     return {
-        setters:[],
+        setters:[
+            function (SocketListener_1_1) {
+                SocketListener_1 = SocketListener_1_1;
+            }],
         execute: function() {
-            BrowserSyncListener = (function () {
+            BrowserSyncListener = (function (_super) {
+                __extends(BrowserSyncListener, _super);
                 function BrowserSyncListener(options) {
-                    this.options = options || {};
+                    _super.call(this);
+                    Object.assign(this, { eventName: 'system:change', eventPath: 'path' }, options);
                 }
-                BrowserSyncListener.prototype.attach = function () {
+                BrowserSyncListener.prototype.attach = function (callback) {
                     var _this = this;
-                    this.onChange = function (event) {
-                        _this.reloader.reloadFile(event[_this.getEventPath()]);
-                    };
                     return this.waitForBrowserSyncReady()
-                        .then(function (bs) {
-                        bs.socket.on(_this.getEventName(), _this.onChange);
-                    });
+                        .then(function (bs) { return _this.socket = bs.socket; })
+                        .then(function () { return _super.prototype.attach.call(_this, callback); });
                 };
-                BrowserSyncListener.prototype.detach = function () {
-                    var _this = this;
-                    return new Promise(function (resolve) {
-                        var bs = window.___browserSync___;
-                        bs.socket.off(_this.getEventName(), _this.onChange);
-                        resolve();
-                    });
-                };
-                ;
                 BrowserSyncListener.prototype.waitForBrowserSyncReady = function () {
                     return new Promise(function (resolve) {
                         var bs = window.___browserSync___;
@@ -45,14 +43,8 @@ System.register([], function(exports_1, context_1) {
                         }
                     });
                 };
-                BrowserSyncListener.prototype.getEventPath = function () {
-                    return this.options.eventPath || 'path';
-                };
-                BrowserSyncListener.prototype.getEventName = function () {
-                    return this.options.eventName || 'system:change';
-                };
                 return BrowserSyncListener;
-            }());
+            }(SocketListener_1.SocketListener));
             exports_1("BrowserSyncListener", BrowserSyncListener);
         }
     }

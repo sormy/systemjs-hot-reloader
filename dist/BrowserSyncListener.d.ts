@@ -1,16 +1,11 @@
-import { IEventListener } from './IEventListener';
-export interface IBrowserSyncListenerOptions {
+import { SocketListener } from './SocketListener';
+import { EventListenerCallback } from './EventListenerInterface';
+export interface BrowserSyncListenerOptionInterface {
     eventName?: string;
     eventPath?: string;
 }
-export declare class BrowserSyncListener implements IEventListener {
-    reloader: any;
-    private options;
-    private onChange;
-    constructor(options?: IBrowserSyncListenerOptions);
-    attach(): Promise<void>;
-    detach(): Promise<void>;
+export declare class BrowserSyncListener extends SocketListener {
+    constructor(options?: BrowserSyncListenerOptionInterface);
+    attach(callback: EventListenerCallback): Promise<void>;
     private waitForBrowserSyncReady();
-    private getEventPath();
-    private getEventName();
 }

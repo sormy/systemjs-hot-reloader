@@ -1,15 +1,15 @@
-import { IReloadPlugin } from './IReloadPlugin';
+import { ReloadPluginInterface } from './ReloadPluginInterface';
 
-type IReactDevToolsGlobalHook = any;
+type ReactDevToolsGlobalHookDataInterface = any;
 
 interface MyWindow extends Window {
-  __REACT_DEVTOOLS_GLOBAL_HOOK__: IReactDevToolsGlobalHook;
+  __REACT_DEVTOOLS_GLOBAL_HOOK__: ReactDevToolsGlobalHookDataInterface;
 }
 
 declare var window: MyWindow;
 
-export class KeepReactRootStatePlugin implements IReloadPlugin {
-  private reactHook: IReactDevToolsGlobalHook;
+export class KeepReactRootStatePlugin implements ReloadPluginInterface {
+  private reactHookData: ReactDevToolsGlobalHookDataInterface;
   private rootStates: any[];
 
   public attach() {
@@ -21,18 +21,14 @@ export class KeepReactRootStatePlugin implements IReloadPlugin {
   }
 
   public beforeReload() {
-    return new Promise<void>((resolve) => {
-      this.saveReactRootState();
-      resolve();
-    });
+    this.saveReactRootState();
+    return Promise.resolve();
   }
 
   public afterReload() {
-    return new Promise<void>((resolve) => {
-      this.loadReactRootState();
-      this.rootStates = [];
-      resolve();
-    });
+    this.loadReactRootState();
+    this.rootStates = [];
+    return Promise.resolve();
   }
 
   private saveReactRootState() {
@@ -54,25 +50,24 @@ export class KeepReactRootStatePlugin implements IReloadPlugin {
   }
 
   private installHook() {
-    return new Promise<void>((resolve) => {
-      if (!window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-        window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { inject: function() {} };
-      }
+    if (!window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+      window.__REACT_DEVTOOLS_GLOBAL_HOOK__ = { inject: function() {} };
+    }
 
-      let self = this;
-      let oldInject = window.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
+    let self = this;
+    let reactGlobalHook = window.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    let oldInject = reactGlobalHook.inject;
 
-      window.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = function(hook: IReactDevToolsGlobalHook) {
-        self.reactHook = hook;
-        return oldInject.apply(this, arguments);
-      };
+    reactGlobalHook.inject = function(hookData: ReactDevToolsGlobalHookDataInterface) {
+      self.reactHookData = hookData;
+      return oldInject.apply(this, arguments);
+    };
 
-      resolve();
-    });
+    return Promise.resolve();
   }
 
   private getClosestComponentInstanceFromNode(node: Element) {
-    var internalInstance = this.reactHook.ComponentTree.getClosestInstanceFromNode(node);
+    var internalInstance = this.reactHookData.ComponentTree.getClosestInstanceFromNode(node);
     return internalInstance._currentElement._owner._instance;
   }
 

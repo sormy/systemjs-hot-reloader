@@ -9,10 +9,8 @@ System.register([], function(exports_1, context_1) {
                 function HotReloader(options) {
                     this.listeners = [];
                     this.plugins = [];
-                    var opts = Object.assign({ debug: false }, options || {});
-                    this.listeners = options.listeners;
-                    this.plugins = options.plugins || [];
-                    this.debug = opts.debug;
+                    this.debug = false;
+                    Object.assign(this, options);
                 }
                 HotReloader.prototype.log = function (message) {
                     if (this.debug) {
@@ -22,11 +20,8 @@ System.register([], function(exports_1, context_1) {
                 HotReloader.prototype.attach = function () {
                     var _this = this;
                     this.log("Attaching hot reloader");
-                    this.listeners.forEach(function (listener) { return listener.reloader = _this; });
-                    return Promise.all(this.listeners.map(function (listener) { return listener.attach(); }))
-                        .then(function () {
-                        return Promise.all(_this.plugins.map(function (plugin) { return plugin.attach(); }));
-                    });
+                    return Promise.all(this.listeners.map(function (listener) { return listener.attach(_this.reloadFile.bind(_this)); }))
+                        .then(function () { return Promise.all(_this.plugins.map(function (plugin) { return plugin.attach(); })); });
                 };
                 HotReloader.prototype.reloadFile = function (path) {
                     this.log("Reloading file: " + path);
@@ -59,9 +54,7 @@ System.register([], function(exports_1, context_1) {
                         _this.loadModuleBackup(moduleBackup);
                         return SystemJS.import(rootModuleName);
                     })
-                        .then(function () {
-                        return Promise.all(supportedPlugins.map(function (plugin) { return plugin.afterReload(); }));
-                    });
+                        .then(function () { return Promise.all(supportedPlugins.map(function (plugin) { return plugin.afterReload(); })); });
                 };
                 HotReloader.prototype.saveModuleBackup = function (list) {
                     return list.reduce(function (result, moduleName) {

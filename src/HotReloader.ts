@@ -1,5 +1,5 @@
-import { IReloadPlugin } from './IReloadPlugin';
-import { IEventListener } from './IEventListener';
+import { ReloadPluginInterface } from './ReloadPluginInterface';
+import { EventListenerInterface, EventListenerCallback } from './EventListenerInterface';
 
 interface MySystemJS extends SystemJSLoader.System {
   normalizeSync: Function;
@@ -8,22 +8,19 @@ interface MySystemJS extends SystemJSLoader.System {
 
 declare var SystemJS: MySystemJS;
 
-export interface IHotReloaderOptions {
-  plugins?: IReloadPlugin[];
-  listeners: IEventListener[];
+export interface HotReloaderOptionsInterface {
+  plugins?: ReloadPluginInterface[];
+  listeners?: EventListenerInterface[];
   debug?: boolean;
 }
 
 export class HotReloader {
-  private listeners: IEventListener[] = [];
-  private plugins: IReloadPlugin[] = [];
-  private debug: boolean;
+  private listeners: EventListenerInterface[] = [];
+  private plugins: ReloadPluginInterface[] = [];
+  private debug: boolean = false;
 
-  constructor(options: IHotReloaderOptions) {
-    var opts = Object.assign({ debug: false }, options || {});
-    this.listeners = options.listeners;
-    this.plugins = options.plugins || [];
-    this.debug = opts.debug;
+  constructor(options?: HotReloaderOptionsInterface) {
+    Object.assign(this, options);
   }
 
   public log(message: string) {
@@ -34,13 +31,8 @@ export class HotReloader {
 
   public attach() {
     this.log(`Attaching hot reloader`);
-
-    this.listeners.forEach(listener => listener.reloader = this);
-
-    return Promise.all(this.listeners.map((listener) => listener.attach()))
-      .then(() => {
-        return Promise.all(this.plugins.map((plugin) => plugin.attach()));
-      });
+    return Promise.all(this.listeners.map((listener) => listener.attach(this.reloadFile.bind(this))))
+      .then(() => Promise.all(this.plugins.map((plugin) => plugin.attach())));
   }
 
   public reloadFile(path: string) {
@@ -80,9 +72,7 @@ export class HotReloader {
         this.loadModuleBackup(moduleBackup);
         return SystemJS.import(rootModuleName);
       })
-      .then(() => {
-        return Promise.all(supportedPlugins.map((plugin) => plugin.afterReload()));
-      });
+      .then(() => Promise.all(supportedPlugins.map((plugin) => plugin.afterReload())));
   }
 
   private saveModuleBackup(list: string[]) {
