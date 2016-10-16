@@ -1,0 +1,1 @@
+{"version":3,"sources":["../src/index.js"],"names":[],"mappings":";;;;;;AAAA;;;;;;kBAEe,iC","file":"index.js","sourcesContent":["import SystemHotReloader from './SystemHotReloader';\n\nexport default new SystemHotReloader();\n"]}

@@ -1,10 +1,26 @@
 {
   "name": "systemjs-hot-reloader",
-  "version": "1.0.0",
-  "description": "SystemJS hot reloader with pluggable reloaders and listeners.",
-  "author": "Artem Butusov <art.sormy@gmail.com> (https://artembutusov.com)",
-  "license": "MIT",
+  "version": "2.0.0",
+  "description": "SystemJS / JSPM hot reloader with support of CSS, SCSS, SASS, LESS, Stylus, React and JavaScript",
+  "main": "dist/index.js",
+  "keywords": [
+    "BrowserSync",
+    "SystemJS",
+    "JSPM",
+    "plugin",
+    "hot",
+    "reload",
+    "CSS",
+    "SCSS",
+    "SASS",
+    "LESS",
+    "Stylus",
+    "React",
+    "JavaScript"
+  ],
+  "author": "Artem Butusov <art.sormy@gmail.com>",
   "homepage": "https://github.com/sormy/systemjs-hot-reloader",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/sormy/systemjs-hot-reloader"
@@ -12,21 +28,27 @@
   "bugs": {
     "url": "https://github.com/sormy/systemjs-hot-reloader/issues"
   },
-  "main": "dist/main.js",
-  "typings": "dist/main.d.ts",
+  "devDependencies": {
+    "babel-cli": "^6.16.0",
+    "babel-eslint": "^7.0.0",
+    "babel-preset-latest": "^6.16.0",
+    "eslint": "^3.7.1",
+    "eslint-config-airbnb": "^12.0.0",
+    "eslint-plugin-import": "^2.0.0"
+  },
+  "dependencies": {
+    "core-js": "^2.4.1"
+  },
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "mkdir -p dist && babel src --out-dir dist --source-maps",
+    "lint": "eslint .",
+    "start": "npm run lint && npm run clean && npm run build"
+  },
   "jspm": {
-    "registry": "github",
-    "main": "main",
+    "main": "index.js",
     "directories": {
       "lib": "dist"
     }
-  },
-  "devDependencies": {
-    "gulp": "^3.9.1",
-    "gulp-clean": "^0.3.2",
-    "gulp-sequence": "^0.4.5",
-    "gulp-typescript": "^2.13.6",
-    "merge2": "^1.0.2",
-    "require-dir": "^0.3.0"
   }
 }

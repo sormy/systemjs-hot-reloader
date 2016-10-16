@@ -1,225 +1,234 @@
 # SystemJS Hot Reloader #
 
-Plugin-based hot reloader for SystemJS.
+Universal hot reloader for SystemJS / JSPM.
 
-This is alternative to capaj/systemjs-hot-reloader.
+This is more powerfull alternative to `capaj/systemjs-hot-reloader`.
 
 ## Benefits ##
 
-- browser sync friendly
-- reload js, jsx, ts, tsx etc on the fly with all related modules on the fly
-- small and easy to read
-- pluggable listeners
-- pluggable reloaders
-- no root transpiler required
-- typescript with typings
-- revert module state back if error occured on import
+* Designed to be used together with `bs-systemjs-hot-reloader` package
+  which will be responsible for
+  * development web server
+  * watch for file changes and emit reload event to this module
+  * track CSS/LESS/SASS/SCSS/Stylus dependencies
+* Reload js, jsx, ts, tsx etc on the fly with all related modules
+* Reload CSS/LESS/SASS/SCSS/Stylus if plugin supports hot reload
+* Console status logging like in webpack
+* Track errors during reload and revert back on errors
+* Custom __reload() / __unload() hooks
+* Optimize reload strategy based on full dependency graph
+* Works with/without enabled `SystemJS.trace`
+* React Hot Loader v3.x friendly
 
 ## TODO ##
 
-- BrowserSync plugin for transparent integration.
-- Full state reloader for React applications.
+* Add tests
+* Test for support with different JSPM / SystemJS versions
+* Fancy error screen (react-redbox ?)
+* Show BrowserSync notification on reload
+* Show BrowserSync notification for hooks (__reload() and __unload())
+* Assume that some modules like scss|sass|less|style have no exports
+  (so reloading them will not cause reload for modules which imports them)
+* Babel plugin to strip __unload() / __reload() for production builds
+* Module unload if it was removed (for example, removed css module)
+* Get rid of react hot loader babel plugin
 
 ## Installation ##
 
 ```shell
+npm install browser-sync bs-systemjs-hot-reloader --save-dev
 jspm install systemjs-hot-reloader=github:sormy/systemjs-hot-reloader --dev
 ```
 
-## Recipes ##
+## Usage ##
 
-### GULP + BrowserSync ###
+Please refer to `bs-systemjs-hot-reloader` usage to setup BrowserSync with plugin.
 
-Backend GULP serve task:
+It is peer dependency for `bs-systemjs-hot-reloader`, but tehnically could be used
+as client side reloader for any 3rd party development server.
+
+### Log Level ###
+
+Log level could be changed on the fly with:
 
 ```javascript
-var gulp = require('gulp');
-var browserSync = require('browser-sync');
+// Log level: 0 - none, 1 - error, 2 - info (default), 3 - debug
+SystemJS.import('systemjs-hot-reloader')
+  .then(function (exports) {
+    exports.default.logLevel = 3;
+  });
+```
 
-gulp.task('serve', function(done) {
-  browserSync({
-    online: false,
-    open: false,
-    port: 9000,
-    //ghostMode: false,
-    server: {
-      baseDir: ['.tmp', '.'],
-      middleware: function(req, res, next) {
-        res.setHeader('Access-Control-Allow-Origin', '*');
-        next();
-      }
+### JavaScript Hot Reloader ###
+
+This reloader could reload any JS module and will track all dependencies.
+
+By default this reloader will recursively all parents of modified module
+and will reinject all modules.
+
+Modules with side effects should export `__unload()` hook.
+
+Modules with alternative reload logic should export `__reload()` hook.
+
+Both hooks have array of reinjected modules as first argument.
+
+### CSS Hot Reloader ###
+
+This reloader could reload any module, including CSS, LESS, SCSS, SASS, Stylus,
+PostCSS if css plugin supports correct reinjection.
+
+Server side `bs-systemjs-hot-reloader` could track LESS, SCSS, SASS, Stylus
+dependency tree to reload root module if one of dependencies is changed.
+
+The fastest reload is guaranteed when css filename could be 1:1 resolved to
+module name. It works when you have css loading workflow like below:
+
+```javascript
+SystemJS.config({
+  meta: {
+    "*.css": {
+      "loader": "plugin-css"
+    },
+    "*.scss": {
+      "loader": "plugin-sass"
     }
-  }, done);
+  },
 });
 ```
-
-Backend GULP watch task:
 
 ```javascript
-var gulp = require('gulp');
-var browserSync = require('browser-sync');
-var path = require('path');
-
-gulp.task('watch', function() {
-  gulp.watch([ 'src/**/*.tsx', 'src/**/*.ts', 'src/**/*.jsx', 'src/**/*.js' ])
-    .on('change', function(event) {
-      var relPath = path.relative('.', event.path);
-      browserSync.notify('Injected: ' + relPath);
-      browserSync.get('singleton').sockets.emit('system:change', { path: relPath });
-    });
-});
+import 'app.css';
+import 'component.scss';
 ```
 
-Frontend index.html:
+A slightly slower loading workflow (guess loader by adding `!` to filename in resolver):
 
-```html
-<script src="jspm_packages/system.js"></script>
-<script src="jspm.config.js"></script>
-<script>
-  if (location.hostname === 'localhost') {
-    SystemJS.import('systemjs-hot-reloader')
-      .then(function(exports) {
-        return new exports.HotReloader({
-          listeners: [ new exports.BrowserSyncListener() ]
-        }).attach();
-      })
-      .then(SystemJS.import('app'));
-  } else {
-    SystemJS.import('app');
-  }
-</script>
+```javascript
+import 'app.css!';
+import 'component.scss!';
 ```
 
-BrowserSyncListener options:
+The slowest loading workflow (need to search in all loaded modules):
 
-- eventName: event name, defaults to "system:change"
-- eventPath: event path, defaults to "path"
+```javascript
+import 'app.css!plugin-css';
+import 'component.scss!plugin-sass';
+```
 
-### Chokidar Socket Emitter Listener ###
+### React Hot Reloader ###
 
-Install socket.io peer dependency:
+We could use WebPack's react hot reloader.
 
 ```shell
-npm install chokidar-socket-emitter --save-dev
-jspm install socket.io-client --dev
+jspm install npm:react-hot-loader@3.0.0-beta.5 --save-dev
 ```
 
-Backend task:
+React Hot Reloader v3.x is the best hot reloader and it uses the best things
+from both react-transformer and react-hot-reloader v1.x - v2.x
+
+How does it work:
+
+* Babel with react preset is required (and react, react-dom too)
+* `react-hot-loader/babel` required to wrap `import()`
+* `react-hot-loader/lib/patch.dev.js` will patch React
+* `react-hot-loader/lib/AppContainer.dev.js` will restore state on reload
+* `__reload()` hook required to rerender application instead of module reload
+* different application entry points for development and production
+
+File: `jspm.config.js`:
 
 ```javascript
-var chokidarSocketEmitter = require('chokidar-socket-emitter');
-chokidarSocketEmitter({ port: 5776, path: '.' });
+SystemJS.config({
+  paths: {
+    "app/": "src/"
+  },
+  babelOptions: {
+    "presets": [
+      "babel-preset-react"
+    ]
+  },
+  browserConfig: {
+    "babelOptions": {
+      "plugins": [
+        "react-hot-loader/babel"
+      ]
+    },
+    "packages": {
+      "app": {
+        "main": "index"
+      }
+    }
+  },
+  packages: {
+    "app": {
+      "main": "index.dist",
+      "defaultExtension": "jsx"
+    }
+  }
+});
 ```
 
-Frontend task:
+File: `src/index.jsx` (development entry point):
 
-```html
-<script src="jspm_packages/system.js"></script>
-<script src="jspm.config.js"></script>
-<script>
-  if (location.hostname === 'localhost') {
-    Promise.all([
-      SystemJS.import('systemjs-hot-reloader'),
-      SystemJS.import('socket.io-client')
-    ])
-    .then(function(exports) {
-      let reloader = exports[0];
-      let socket = exports[1];
-      return new reloader.HotReloader({
-        listeners: [
-          new reloader.SocketListener({
-            socket: socket('http://localhost:5776'),
-            eventPath: 'path',
-            eventName: 'change'
-          })
-        ]
-      }).attach();
-    })
-    .then(SystemJS.import('app'));
-  } else {
-    SystemJS.import('app');
-  }
-</script>
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom';
+
+import 'react-hot-loader/lib/patch.dev.js';
+import AppContainer from 'react-hot-loader/lib/AppContainer.dev.js';
+
+import App from './App';
+
+const root = document.getElementById('root');
+
+ReactDOM.render(<AppContainer><App /></AppContainer>, root);
+
+export function __reload() {
+  ReactDOM.render(<AppContainer><App /></AppContainer>, root);
+}
 ```
 
-## Hook into existing 3rd party socket.io ##
+File: `src/index.dist.jsx` (production entry point):
 
-Backend task: any socket.io emitter
+```javascript
+import React from 'react';
+import ReactDOM from 'react-dom';
 
-Frontend task: any socket.io listener
+import App from './App';
 
-```html
-<script src="jspm_packages/system.js"></script>
-<script src="jspm.config.js"></script>
-<script>
-  if (location.hostname === 'localhost') {
-    SystemJS.import('systemjs-hot-reloader')
-      .then(function(exports) {
-        return new exports.HotReloader({
-          listeners: [
-            new exports.SocketListener({
-              socket: ...
-            })
-          ]
-        }).attach();
-      })
-      .then(SystemJS.import('app'));
-  } else {
-    SystemJS.import('app');
-  }
-</script>
+ReactDOM.render(<App/>, document.getElementById('root'));
 ```
 
-SocketListener options:
-
-- socket: socket.io instance
-- eventName: event name, defaults to "change"
-- eventPath: event path, defaults to "path"
-
-## React root state reloader ##
-
-Reloaded react components will loose their state if they don't have properly wired in redux, mobx etc.
-
-But this small plugin will allow to persist root components state. Just as an example of how plugins could be used.
+File: `./index.html` (development entry point):
 
 ```html
-<script src="jspm_packages/system.js"></script>
-<script src="jspm.config.js"></script>
-<script>
-  if (location.hostname === 'localhost') {
-    SystemJS.import('systemjs-hot-reloader')
-      .then(function(exports) {
-        return new exports.HotReloader({
-          listeners: [ new exports.BrowserSyncListener() ],
-          plugins: [ new exports.KeepReactRootStatePlugin() ]
-        }).attach();
-      })
-      .then(SystemJS.import('app'));
-  } else {
-    SystemJS.import('app');
-  }
-</script>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Application</title>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script src="jspm_packages/system.js"></script>
+    <script src="jspm.config.js"></script>
+    <script>SystemJS.import('app');</script>
+  </body>
+</html>
 ```
 
-## Debug hot reloader ##
-
-Enable debug to show some information on console.
+File: `./index.dist.html` (production entry point):
 
 ```html
-<script src="jspm_packages/system.js"></script>
-<script src="jspm.config.js"></script>
-<script>
-  if (location.hostname === 'localhost') {
-    SystemJS.import('systemjs-hot-reloader')
-      .then(function(exports) {
-        return new exports.HotReloader({
-          listeners: [ new exports.BrowserSyncListener() ],
-          debug: true
-        }).attach();
-      })
-      .then(SystemJS.import('app'));
-  } else {
-    SystemJS.import('app');
-  }
-</script>
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Application</title>
+  </head>
+  <body>
+    <div id="app-root"></div>
+    <script src="app.js"></script>
+  </body>
+</html>
 ```
