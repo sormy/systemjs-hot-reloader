@@ -81,6 +81,11 @@ PostCSS if css plugin supports correct reinjection.
 Server side `bs-systemjs-hot-reloader` could track LESS, SCSS, SASS, Stylus
 dependency tree to reload root module if one of dependencies is changed.
 
+Avoid using of loaders via `!` because in that case there is no 100% way to
+convert file name into module name so reloader will have to iterate over all
+registered modules to find correct module name. It is recommended to define
+loader via `meta` SystemJS config section for files based on their extension.
+
 The fastest reload is guaranteed when css filename could be 1:1 resolved to
 module name. It works when you have css loading workflow like below:
 
