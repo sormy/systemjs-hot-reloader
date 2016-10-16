@@ -4,7 +4,7 @@ Universal hot reloader for SystemJS / JSPM.
 
 This is more powerfull alternative to `capaj/systemjs-hot-reloader`.
 
-## Benefits ##
+## Features ##
 
 * Designed to be used together with `bs-systemjs-hot-reloader` package
   which will be responsible for
@@ -32,12 +32,13 @@ This is more powerfull alternative to `capaj/systemjs-hot-reloader`.
 * Babel plugin to strip __unload() / __reload() for production builds
 * Module unload if it was removed (for example, removed css module)
 * Get rid of react hot loader babel plugin
+* Reload assets (fonts, images, cursors etc)
 
 ## Installation ##
 
 ```shell
 npm install browser-sync bs-systemjs-hot-reloader --save-dev
-jspm install systemjs-hot-reloader=github:sormy/systemjs-hot-reloader --dev
+jspm install npm:systemjs-hot-reloader --dev
 ```
 
 ## Usage ##
@@ -117,6 +118,13 @@ import 'component.scss!plugin-sass';
 
 ### React Hot Reloader ###
 
+React, babel plugin, babel preset are required (obviously):
+
+```shell
+jspm install react react-dom
+jspm install plugin-babel babel-preset-react --dev
+```
+
 We could use WebPack's react hot reloader.
 
 ```shell
@@ -124,11 +132,10 @@ jspm install npm:react-hot-loader@3.0.0-beta.5 --save-dev
 ```
 
 React Hot Reloader v3.x is the best hot reloader and it uses the best things
-from both react-transformer and react-hot-reloader v1.x - v2.x
+from both `react-transform-hmr` and `react-hot-loader` v1.x - v2.x
 
 How does it work:
 
-* Babel with react preset is required (and react, react-dom too)
 * `react-hot-loader/babel` required to wrap `import()`
 * `react-hot-loader/lib/patch.dev.js` will patch React
 * `react-hot-loader/lib/AppContainer.dev.js` will restore state on reload
@@ -142,6 +149,7 @@ SystemJS.config({
   paths: {
     "app/": "src/"
   },
+  transpiler: "plugin-babel",
   babelOptions: {
     "presets": [
       "babel-preset-react"
