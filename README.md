@@ -38,7 +38,7 @@ This is more powerfull alternative to `capaj/systemjs-hot-reloader`.
 
 ```shell
 npm install browser-sync bs-systemjs-hot-reloader --save-dev
-jspm install npm:systemjs-hot-reloader --dev
+jspm install npm:systemjs-hot-reloader-ex --dev
 ```
 
 ## Usage ##
@@ -54,7 +54,7 @@ Log level could be changed on the fly with:
 
 ```javascript
 // Log level: 0 - none, 1 - error, 2 - info (default), 3 - debug
-SystemJS.import('systemjs-hot-reloader')
+SystemJS.import('systemjs-hot-reloader-ex')
   .then(function (exports) {
     exports.default.logLevel = 3;
   });
