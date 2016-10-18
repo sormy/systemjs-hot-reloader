@@ -60,6 +60,16 @@ SystemJS.import('systemjs-hot-reloader-ex')
   });
 ```
 
+or via `jspm.config.js`:
+
+```javascript
+SystemJS.config({
+  hotReloaderOptions: {
+    logLevel: 3
+  }
+});
+```
+
 ### JavaScript Hot Reloader ###
 
 This reloader could reload any JS module and will track all dependencies.
@@ -92,12 +102,10 @@ module name. It works when you have css loading workflow like below:
 ```javascript
 SystemJS.config({
   meta: {
-    "*.css": {
-      "loader": "plugin-css"
-    },
-    "*.scss": {
-      "loader": "plugin-sass"
-    }
+    "*.css": { "loader": "plugin-css" },
+    "*.scss": { "loader": "plugin-sass" },
+    "*.sass": { "loader": "plugin-sass" },
+    "*.less": { "loader": "plugin-less" }
   },
 });
 ```

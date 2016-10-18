@@ -12,13 +12,18 @@ export default class SystemHotReloader {
     const opts = options || {};
 
     this.loader = opts.loader || SystemJS || System;
-    this.logLevel = opts.loader === undefined ? 2 : opts.logLevel;
-
-    this.logger = this.createLogger('HMR');
 
     if (!this.loader) {
       throw new Error('Unable to instantiate SystemJS Hot Reloader without SystemJS');
     }
+
+    if (this.loader.hotReloaderOptions) {
+      Object.assign(opts, this.loader.hotReloaderOptions);
+    }
+
+    this.logLevel = opts.logLevel === undefined ? 2 : opts.logLevel;
+
+    this.logger = this.createLogger('HMR');
   }
 
   /**
