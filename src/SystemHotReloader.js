@@ -206,11 +206,20 @@ export default class SystemHotReloader {
     if (reload) {
       return Promise.resolve()
         .then(() => this.fixModuleDeps(name))
-        .then(() => reload(moduleChain));
+        .then(() => {
+          this.logger.debug(`Calling module ${this.cleanName(name)} __reload() hook`);
+          return reload(moduleChain);
+        });
     }
 
     return Promise.resolve()
-      .then(() => (unload ? unload(moduleChain) : undefined))
+      .then(() => {
+        if (!unload) {
+          return undefined;
+        }
+        this.logger.debug(`Calling module ${this.cleanName(name)} unload() hook`);
+        return unload(moduleChain);
+      })
       .then(() => (backup ? this.restoreModuleBackup(backup) : this.deleteModule(name)))
       .then(() => this.importModule(name));
   }
