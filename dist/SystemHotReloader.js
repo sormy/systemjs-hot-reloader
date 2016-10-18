@@ -240,12 +240,17 @@ var SystemHotReloader = function () {
         return Promise.resolve().then(function () {
           return _this3.fixModuleDeps(name);
         }).then(function () {
+          _this3.logger.debug('Calling module ' + _this3.cleanName(name) + ' __reload() hook');
           return reload(moduleChain);
         });
       }
 
       return Promise.resolve().then(function () {
-        return unload ? unload(moduleChain) : undefined;
+        if (!unload) {
+          return undefined;
+        }
+        _this3.logger.debug('Calling module ' + _this3.cleanName(name) + ' unload() hook');
+        return unload(moduleChain);
       }).then(function () {
         return backup ? _this3.restoreModuleBackup(backup) : _this3.deleteModule(name);
       }).then(function () {
