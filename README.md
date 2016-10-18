@@ -4,6 +4,8 @@ Universal hot reloader for SystemJS / JSPM.
 
 This is more powerfull alternative to `capaj/systemjs-hot-reloader`.
 
+Featured demo is available here: <https://github.com/sormy/jspm-hot-skeleton.git>
+
 ## Features ##
 
 * Designed to be used together with `bs-systemjs-hot-reloader` package
