@@ -123,6 +123,10 @@ import 'component.scss!plugin-sass';
 
 ### React Hot Reloader ###
 
+If you keep state in store model object or in `mobx` and your application will be
+able to restore state from it, then you don't need this part, just keep you store
+instance in separate module.
+
 React, babel plugin, babel preset are required (obviously):
 
 ```shell
@@ -141,11 +145,14 @@ from both `react-transform-hmr` and `react-hot-loader` v1.x - v2.x
 
 How does it work:
 
-* `react-hot-loader/babel` required to wrap `import()`
-* `react-hot-loader/lib/patch.dev.js` will patch React
+* `react-hot-loader/babel` babel plugin is required to wrap `import()`
+* `react-hot-loader/lib/patch.dev.js` is required, will patch React on the fly
 * `react-hot-loader/lib/AppContainer.dev.js` will restore state on reload
-* `__reload()` hook required to rerender application instead of module reload
+* `__reload()` hook required to rerender application instead of full module reload
 * different application entry points for development and production
+
+Please note, that **react-hot-loader/babel** should be **FIRST** plugin in list
+of Babel plugins.
 
 File: `jspm.config.js`:
 
@@ -153,6 +160,9 @@ File: `jspm.config.js`:
 SystemJS.config({
   paths: {
     "app/": "src/"
+  },
+  meta: {
+    "*.jsx": { loader: "plugin-babel" }
   },
   transpiler: "plugin-babel",
   babelOptions: {
@@ -168,13 +178,13 @@ SystemJS.config({
     },
     "packages": {
       "app": {
-        "main": "index"
+        "main": "index.jsx"
       }
     }
   },
   packages: {
     "app": {
-      "main": "index.dist",
+      "main": "index.dist.jsx",
       "defaultExtension": "jsx"
     }
   }
@@ -240,7 +250,7 @@ File: `./index.dist.html` (production entry point):
     <title>Application</title>
   </head>
   <body>
-    <div id="app-root"></div>
+    <div id="root"></div>
     <script src="app.js"></script>
   </body>
 </html>
