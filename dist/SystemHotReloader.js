@@ -331,7 +331,7 @@ var SystemHotReloader = function () {
           depModuleRecord.importers.forEach(function (impModuleRecord, index) {
             if (impModuleRecord && moduleRecord.name === impModuleRecord.name) {
               _this5.logger.debug('Removing importer ' + _this5.cleanName(impModuleRecord.name) + ' from module ' + _this5.cleanName(depModuleRecord.name));
-              depModuleRecord.importers[index] = null;
+              depModuleRecord.importers.splice(index, 1);
             }
           });
         });

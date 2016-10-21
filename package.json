@@ -1,6 +1,6 @@
 {
   "name": "systemjs-hot-reloader-ex",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "SystemJS / JSPM hot reloader with support of CSS, SCSS, SASS, LESS, Stylus, React and JavaScript",
   "main": "dist/index.js",
   "keywords": [

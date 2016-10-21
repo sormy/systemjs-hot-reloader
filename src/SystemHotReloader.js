@@ -286,7 +286,7 @@ export default class SystemHotReloader {
             .forEach((impModuleRecord, index) => {
               if (impModuleRecord && moduleRecord.name === impModuleRecord.name) {
                 this.logger.debug(`Removing importer ${this.cleanName(impModuleRecord.name)} from module ${this.cleanName(depModuleRecord.name)}`);
-                depModuleRecord.importers[index] = null;
+                depModuleRecord.importers.splice(index, 1);
               }
             });
         });
