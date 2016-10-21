@@ -24,6 +24,9 @@ export default class SystemHotReloader {
     this.logLevel = opts.logLevel === undefined ? 2 : opts.logLevel;
 
     this.logger = this.createLogger('HMR');
+
+    this.reloadInProgress = false;
+    this.reloadQueue = [];
   }
 
   /**
@@ -119,6 +122,16 @@ export default class SystemHotReloader {
       return Promise.resolve();
     }
 
+    if (this.reloadInProgress) {
+      this.logger.info('Reloader is busy, pospone reload');
+      if (this.reloadQueue.indexOf(moduleName) === -1) {
+        this.reloadQueue.push(moduleName);
+      }
+      return Promise.resolve();
+    }
+
+    this.reloadInProgress = true;
+
     const moduleChain = this.getReloadChain([moduleName]);
     const moduleBackups = {};
 
@@ -163,6 +176,9 @@ export default class SystemHotReloader {
         const time = (window.performance.now() - startTime) / 1000;
         const timeSecRound = Math.floor(time * 100) / 100;
         this.logger.info(`Reload took ${timeSecRound} sec`);
+
+        // if everything is ok we need to reload next module
+        return this.reloadNext();
       })
       .catch((error) => {
         if (error) {
@@ -184,6 +200,10 @@ export default class SystemHotReloader {
           this.logger.info('Application state was restored');
         });
 
+        // if something goes wrong and we restored previous state we still need to
+        // reload next module
+        promise = promise.then(() => this.reloadNext());
+
         return promise;
       })
       .catch((error) => {
@@ -191,7 +211,24 @@ export default class SystemHotReloader {
           this.logger.error(error.stack || error);
         }
         this.logger.error('An unrecoverable error occured during reverting');
+
+        // if something catastrphically failed we try to do reload for next module
+        return this.reloadNext();
       });
+  }
+
+  /**
+   * Force reload next module in queue if available.
+   */
+  reloadNext() {
+    this.reloadInProgress = false;
+
+    if (this.reloadQueue.length > 0) {
+      const nextModule = this.reloadQueue.shift();
+      return this.reloadModule(nextModule);
+    }
+
+    return Promise.resolve();
   }
 
   /**
