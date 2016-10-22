@@ -1,6 +1,6 @@
 {
   "name": "systemjs-hot-reloader-ex",
-  "version": "2.0.5",
+  "version": "2.0.6",
   "description": "SystemJS / JSPM hot reloader with support of CSS, SCSS, SASS, LESS, Stylus, React and JavaScript",
   "main": "dist/index.js",
   "keywords": [
@@ -43,6 +43,7 @@
     "clean": "rm -rf dist",
     "build": "mkdir -p dist && babel src --out-dir dist --source-maps",
     "lint": "eslint .",
+    "prepublish": "npm run start",
     "start": "npm run lint && npm run clean && npm run build"
   },
   "jspm": {

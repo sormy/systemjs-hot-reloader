@@ -24,6 +24,10 @@ export default class SystemHotReloader {
     this.logLevel = opts.logLevel === undefined ? 2 : opts.logLevel;
 
     this.logger = this.createLogger('HMR');
+
+    if (!this.loader.trace) {
+      this.logger.info('Set "SystemJS.trace = true" to be able to auto unload not used modules');
+    }
   }
 
   /**
@@ -90,6 +94,7 @@ export default class SystemHotReloader {
 
     // we did not find module :-(
     this.logger.info('Nothing to update');
+
     return Promise.resolve();
   }
 
@@ -203,6 +208,8 @@ export default class SystemHotReloader {
     const unload = exports ? exports.__unload : undefined;
     const reload = exports ? exports.__reload : undefined;
 
+    let oldDeps = [];
+
     if (reload) {
       return Promise.resolve()
         .then(() => this.fixModuleDeps(name))
@@ -220,8 +227,47 @@ export default class SystemHotReloader {
         this.logger.debug(`Calling module ${this.cleanName(name)} unload() hook`);
         return unload(moduleChain);
       })
+      .then(() => {
+        oldDeps = this.getModuleDepNames(name);
+      })
       .then(() => (backup ? this.restoreModuleBackup(backup) : this.deleteModule(name)))
-      .then(() => this.importModule(name));
+      .then(() => this.importModule(name))
+      .then(() => {
+        const newDeps = this.getModuleDepNames(name);
+        this.deleteOldDeps(oldDeps, newDeps);
+      });
+  }
+
+  /**
+   * Delete modules from oldDeps if they do not exist in newDeps.
+   */
+  deleteOldDeps(oldDeps, newDeps) {
+    const depDiff = oldDeps.filter(depName => newDeps.indexOf(depName) === -1);
+    depDiff.forEach(depName => this.deleteModule(depName));
+  }
+
+  /**
+   * Get normalized list of module dependency names based on trace information
+   * or based on module records.
+   */
+  getModuleDepNames(name) {
+    const load = this.loader.loads[name];
+
+    if (load) {
+      return load.deps.map((address) => {
+        return load.depMap[address];
+      });
+    }
+
+    const moduleRecord = this.loader._loader.moduleRecords[name];
+
+    if (moduleRecord) {
+      return moduleRecord.dependencies
+        .map(record => (record ? record.name : false))
+        .filter(depName => !!depName);
+    }
+
+    return [];
   }
 
   /**
@@ -294,6 +340,37 @@ export default class SystemHotReloader {
 
     this.logger.debug(`Removing module ${this.cleanName(name)}`);
     this.loader.delete(name);
+
+    this.clearModuleResources(name);
+  }
+
+  /**
+   * Clear module resources located in DOM.
+   *
+   * Usefull for CSS/LESS/SASS/SCSS/Stylus plugins who keep CSS as style or link tags.
+   */
+  clearModuleResources(name) {
+    const address = this.getModuleAddress(name);
+
+    // for example, plugin-sass
+    Array.from(document.querySelectorAll(`[data-url="${address}"]`))
+      .forEach(node => node.remove());
+
+    // for example, plugin-css
+    Array.from(document.querySelectorAll('[data-systemjs-css]'))
+      .filter(node => node.href === address)
+      .forEach(node => node.remove());
+  }
+
+  /**
+   * Get module address by name.
+   *
+   * Try to use trace information if availabe, if not then try to guess it.
+   * Address guessing should work well for plugins without custom translation hook.
+   */
+  getModuleAddress(name) {
+    const load = this.loader.loads[name];
+    return load ? load.address : name.replace(/!.*$/, '');
   }
 
   /**

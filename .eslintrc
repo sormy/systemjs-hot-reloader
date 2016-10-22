@@ -9,7 +9,9 @@
   },
   "globals": {
     "System": true,
-    "SystemJS": true,
-    "window": true
+    "SystemJS": true
+  },
+  "env": {
+    "browser": true
   }
 }

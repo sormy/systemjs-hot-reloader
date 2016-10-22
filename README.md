@@ -18,6 +18,8 @@ Featured demo is available here: <https://github.com/sormy/jspm-hot-skeleton.git
 * Console status logging like in webpack
 * Track errors during reload and revert back on errors
 * Custom __reload() / __unload() hooks
+* Unload unused modules (mostly usefull for css modules).
+  `SystemJS.trace = true` is required to track modules without exports.
 * Optimize reload strategy based on full dependency graph
 * Works with/without enabled `SystemJS.trace`
 * React Hot Loader v3.x friendly
@@ -32,7 +34,7 @@ Featured demo is available here: <https://github.com/sormy/jspm-hot-skeleton.git
 * Assume that some modules like scss|sass|less|style have no exports
   (so reloading them will not cause reload for modules which imports them)
 * Babel plugin to strip __unload() / __reload() for production builds
-* Module unload if it was removed (for example, removed css module)
+* Show list of unloaded modules
 * Get rid of react hot loader babel plugin
 * Reload assets (fonts, images, cursors etc)
 
@@ -85,6 +87,9 @@ Modules with alternative reload logic should export `__reload()` hook.
 
 Both hooks have array of reinjected modules as first argument.
 
+Please note that unused modules without exports can't be unloaded without extra
+debug information which could be enable with `SystemJS.trace = true`.
+
 ### CSS Hot Reloader ###
 
 This reloader could reload any module, including CSS, LESS, SCSS, SASS, Stylus,
@@ -92,6 +97,11 @@ PostCSS if css plugin supports correct reinjection.
 
 Server side `bs-systemjs-hot-reloader` could track LESS, SCSS, SASS, Stylus
 dependency tree to reload root module if one of dependencies is changed.
+
+If you would like to be able to remove CSS modules on the fly after they were
+initially loaded then you need to enable `SystemJS.trace = true`. Module to DOM
+relations are tracked with selectors: `[data-url={address}]` and
+`[data-systemjs-css, href={address}]`.
 
 Avoid using of loaders via `!` because in that case there is no 100% way to
 convert file name into module name so reloader will have to iterate over all

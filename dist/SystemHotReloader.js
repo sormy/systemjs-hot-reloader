@@ -36,6 +36,10 @@ var SystemHotReloader = function () {
     this.logLevel = opts.logLevel === undefined ? 2 : opts.logLevel;
 
     this.logger = this.createLogger('HMR');
+
+    if (!this.loader.trace) {
+      this.logger.info('Set "SystemJS.trace = true" to be able to auto unload not used modules');
+    }
   }
 
   /**
@@ -114,6 +118,7 @@ var SystemHotReloader = function () {
 
       // we did not find module :-(
       this.logger.info('Nothing to update');
+
       return Promise.resolve();
     }
 
@@ -236,6 +241,8 @@ var SystemHotReloader = function () {
       var unload = exports ? exports.__unload : undefined;
       var reload = exports ? exports.__reload : undefined;
 
+      var oldDeps = [];
+
       if (reload) {
         return Promise.resolve().then(function () {
           return _this3.fixModuleDeps(name);
@@ -252,10 +259,61 @@ var SystemHotReloader = function () {
         _this3.logger.debug('Calling module ' + _this3.cleanName(name) + ' unload() hook');
         return unload(moduleChain);
       }).then(function () {
+        oldDeps = _this3.getModuleDepNames(name);
+      }).then(function () {
         return backup ? _this3.restoreModuleBackup(backup) : _this3.deleteModule(name);
       }).then(function () {
         return _this3.importModule(name);
+      }).then(function () {
+        var newDeps = _this3.getModuleDepNames(name);
+        _this3.deleteOldDeps(oldDeps, newDeps);
       });
+    }
+
+    /**
+     * Delete modules from oldDeps if they do not exist in newDeps.
+     */
+
+  }, {
+    key: 'deleteOldDeps',
+    value: function deleteOldDeps(oldDeps, newDeps) {
+      var _this4 = this;
+
+      var depDiff = oldDeps.filter(function (depName) {
+        return newDeps.indexOf(depName) === -1;
+      });
+      depDiff.forEach(function (depName) {
+        return _this4.deleteModule(depName);
+      });
+    }
+
+    /**
+     * Get normalized list of module dependency names based on trace information
+     * or based on module records.
+     */
+
+  }, {
+    key: 'getModuleDepNames',
+    value: function getModuleDepNames(name) {
+      var load = this.loader.loads[name];
+
+      if (load) {
+        return load.deps.map(function (address) {
+          return load.depMap[address];
+        });
+      }
+
+      var moduleRecord = this.loader._loader.moduleRecords[name];
+
+      if (moduleRecord) {
+        return moduleRecord.dependencies.map(function (record) {
+          return record ? record.name : false;
+        }).filter(function (depName) {
+          return !!depName;
+        });
+      }
+
+      return [];
     }
 
     /**
@@ -265,7 +323,7 @@ var SystemHotReloader = function () {
   }, {
     key: 'fixModuleDeps',
     value: function fixModuleDeps(name) {
-      var _this4 = this;
+      var _this5 = this;
 
       var moduleRecords = this.loader._loader.moduleRecords;
 
@@ -283,7 +341,7 @@ var SystemHotReloader = function () {
         }
 
         if (newDepModuleRecord !== depModuleRecord) {
-          _this4.logger.debug('Fixing dependency ' + _this4.cleanName(depModuleRecord.name) + ' for module ' + _this4.cleanName(moduleRecord.name));
+          _this5.logger.debug('Fixing dependency ' + _this5.cleanName(depModuleRecord.name) + ' for module ' + _this5.cleanName(moduleRecord.name));
 
           moduleRecord.setters[index](newDepModuleRecord.exports);
 
@@ -319,7 +377,7 @@ var SystemHotReloader = function () {
   }, {
     key: 'deleteModule',
     value: function deleteModule(name) {
-      var _this5 = this;
+      var _this6 = this;
 
       var moduleRecord = this.loader._loader.moduleRecords[name];
 
@@ -330,7 +388,7 @@ var SystemHotReloader = function () {
           }
           depModuleRecord.importers.forEach(function (impModuleRecord, index) {
             if (impModuleRecord && moduleRecord.name === impModuleRecord.name) {
-              _this5.logger.debug('Removing importer ' + _this5.cleanName(impModuleRecord.name) + ' from module ' + _this5.cleanName(depModuleRecord.name));
+              _this6.logger.debug('Removing importer ' + _this6.cleanName(impModuleRecord.name) + ' from module ' + _this6.cleanName(depModuleRecord.name));
               depModuleRecord.importers.splice(index, 1);
             }
           });
@@ -339,6 +397,46 @@ var SystemHotReloader = function () {
 
       this.logger.debug('Removing module ' + this.cleanName(name));
       this.loader.delete(name);
+
+      this.clearModuleResources(name);
+    }
+
+    /**
+     * Clear module resources located in DOM.
+     *
+     * Usefull for CSS/LESS/SASS/SCSS/Stylus plugins who keep CSS as style or link tags.
+     */
+
+  }, {
+    key: 'clearModuleResources',
+    value: function clearModuleResources(name) {
+      var address = this.getModuleAddress(name);
+
+      // for example, plugin-sass
+      Array.from(document.querySelectorAll('[data-url="' + address + '"]')).forEach(function (node) {
+        return node.remove();
+      });
+
+      // for example, plugin-css
+      Array.from(document.querySelectorAll('[data-systemjs-css]')).filter(function (node) {
+        return node.href === address;
+      }).forEach(function (node) {
+        return node.remove();
+      });
+    }
+
+    /**
+     * Get module address by name.
+     *
+     * Try to use trace information if availabe, if not then try to guess it.
+     * Address guessing should work well for plugins without custom translation hook.
+     */
+
+  }, {
+    key: 'getModuleAddress',
+    value: function getModuleAddress(name) {
+      var load = this.loader.loads[name];
+      return load ? load.address : name.replace(/!.*$/, '');
     }
 
     /**
@@ -371,7 +469,7 @@ var SystemHotReloader = function () {
   }, {
     key: 'getModuleDistanceToRoot',
     value: function getModuleDistanceToRoot(name, record, cache) {
-      var _this6 = this;
+      var _this7 = this;
 
       var distance = void 0;
       if (cache[name] !== undefined) {
@@ -381,7 +479,7 @@ var SystemHotReloader = function () {
         distance = 0;
       } else {
         distance = record.importers.reduce(function (result, impRecord) {
-          var impDistance = 1 + _this6.getModuleDistanceToRoot(impRecord.name, impRecord, cache);
+          var impDistance = 1 + _this7.getModuleDistanceToRoot(impRecord.name, impRecord, cache);
           return result === null ? impDistance : Math.min(result, impDistance);
         }, null);
       }
@@ -396,7 +494,7 @@ var SystemHotReloader = function () {
   }, {
     key: 'getReloadChain',
     value: function getReloadChain(modules, cache) {
-      var _this7 = this;
+      var _this8 = this;
 
       if (modules.length === 0) {
         return modules;
@@ -410,7 +508,7 @@ var SystemHotReloader = function () {
 
       var farNode = modules.reduce(function (result, name, index) {
         var record = records[name] ? records[name] : undefined;
-        var distance = _this7.getModuleDistanceToRoot(name, record, cache);
+        var distance = _this8.getModuleDistanceToRoot(name, record, cache);
         var importers = !record ? [] : record.importers.map(function (item) {
           return item.name;
         });
