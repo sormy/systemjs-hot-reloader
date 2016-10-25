@@ -412,19 +412,23 @@ var SystemHotReloader = function () {
     value: function clearModuleResources(name) {
       var address = this.getModuleAddress(name);
 
+      var removeNode = function removeNode(node) {
+        if (window.URL && node.href.startsWith('blob:')) {
+          URL.revokeObjectURL(node.href);
+        }
+        node.remove();
+      };
+
       // for example, plugin-sass
       Array.from(document.querySelectorAll('[data-url="' + address + '"]')).forEach(function (node) {
-        return node.remove();
+        return removeNode(node);
       });
 
       // for example, plugin-css
       Array.from(document.querySelectorAll('[data-systemjs-css]')).filter(function (node) {
         return node.href === address;
       }).forEach(function (node) {
-        if (node.href.startsWith('blob:') && window.URL) {
-          URL.revokeObjectURL(node.href);
-        }
-        node.remove();
+        return removeNode(node);
       });
     }
 
