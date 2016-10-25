@@ -359,7 +359,12 @@ export default class SystemHotReloader {
     // for example, plugin-css
     Array.from(document.querySelectorAll('[data-systemjs-css]'))
       .filter(node => node.href === address)
-      .forEach(node => node.remove());
+      .forEach((node) => {
+        if (node.href.startsWith('blob:') && window.URL) {
+          URL.revokeObjectURL(node.href);
+        }
+        node.remove();
+      });
   }
 
   /**

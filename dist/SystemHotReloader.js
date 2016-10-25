@@ -421,7 +421,10 @@ var SystemHotReloader = function () {
       Array.from(document.querySelectorAll('[data-systemjs-css]')).filter(function (node) {
         return node.href === address;
       }).forEach(function (node) {
-        return node.remove();
+        if (node.href.startsWith('blob:') && window.URL) {
+          URL.revokeObjectURL(node.href);
+        }
+        node.remove();
       });
     }
 
