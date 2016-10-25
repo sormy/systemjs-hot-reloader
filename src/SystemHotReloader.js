@@ -23,6 +23,8 @@ export default class SystemHotReloader {
 
     this.logLevel = opts.logLevel === undefined ? 2 : opts.logLevel;
 
+    this.enableClearResources = opts.clearResources === undefined ? true : opts.clearResources;
+
     this.logger = this.createLogger('HMR');
 
     if (!this.loader.trace) {
@@ -341,7 +343,9 @@ export default class SystemHotReloader {
     this.logger.debug(`Removing module ${this.cleanName(name)}`);
     this.loader.delete(name);
 
-    this.clearModuleResources(name);
+    if (this.enableClearResources) {
+      this.clearModuleResources(name);
+    }
   }
 
   /**

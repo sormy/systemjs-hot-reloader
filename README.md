@@ -141,6 +141,20 @@ import 'app.css!plugin-css';
 import 'component.scss!plugin-sass';
 ```
 
+By default this hot reloader will try to free resources occupued by style/link
+tag with css before reload, so it will drop link/style tag and expects that
+loader plugin will be able to reinject style/link tag with css. That could cause
+changing order of style/link tags after hot reload. If you would like to disable
+this behaviour then pass `clearResources = false`:
+
+```javascript
+SystemJS.config({
+  hotReloaderOptions: {
+    clearResources: false
+  }
+});
+```
+
 ### React Hot Reloader ###
 
 If you keep state in store model object or in `mobx` and your application will be
