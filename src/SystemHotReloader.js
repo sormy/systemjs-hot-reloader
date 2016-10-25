@@ -352,19 +352,21 @@ export default class SystemHotReloader {
   clearModuleResources(name) {
     const address = this.getModuleAddress(name);
 
+    const removeNode = (node) => {
+      if (window.URL && node.href.startsWith('blob:')) {
+        URL.revokeObjectURL(node.href);
+      }
+      node.remove();
+    };
+
     // for example, plugin-sass
     Array.from(document.querySelectorAll(`[data-url="${address}"]`))
-      .forEach(node => node.remove());
+      .forEach(node => removeNode(node));
 
     // for example, plugin-css
     Array.from(document.querySelectorAll('[data-systemjs-css]'))
       .filter(node => node.href === address)
-      .forEach((node) => {
-        if (node.href.startsWith('blob:') && window.URL) {
-          URL.revokeObjectURL(node.href);
-        }
-        node.remove();
-      });
+      .forEach(node => removeNode(node));
   }
 
   /**
