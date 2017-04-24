@@ -1,6 +1,6 @@
 # SystemJS Hot Reloader #
 
-**This hot reloader is compatbile with SystemJS v0.19.x only for now**
+**This hot reloader is compatible with SystemJS v0.19.x only for now**
 
 Universal hot reloader for SystemJS / JSPM.
 
