@@ -1,5 +1,7 @@
 # SystemJS Hot Reloader #
 
+**This hot reloader is compatbile with SystemJS v0.19.x only for now**
+
 Universal hot reloader for SystemJS / JSPM.
 
 This is more powerfull alternative to `capaj/systemjs-hot-reloader`.
@@ -171,7 +173,7 @@ jspm install plugin-babel babel-preset-react --dev
 We could use WebPack's react hot reloader.
 
 ```shell
-jspm install npm:react-hot-loader@3.0.0-beta.5 --save-dev
+jspm install npm:react-hot-loader@3.0.0-beta.6 --save-dev
 ```
 
 React Hot Reloader v3.x is the best hot reloader and it uses the best things
@@ -198,10 +200,11 @@ SystemJS.config({
   meta: {
     "*.jsx": { loader: "plugin-babel" }
   },
+  trace: true, // fix me?
   transpiler: "plugin-babel",
   babelOptions: {
     "presets": [
-      "babel-preset-react"
+      "babel-preset-react"  // fix me
     ]
   },
   browserConfig: {
